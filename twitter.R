@@ -1,3 +1,7 @@
+# Saurav Kharb
+# Research Assitant
+# This script makes calls on the twitteR api using tweet id's
+
 library(twitteR)
 library("httr")
 library("xlsx")
@@ -10,7 +14,7 @@ access_secret <- "0JDPxoIQvcukZ8rqoFIDDssrxRkglWvCwdG2dtWT7D1Fu"
 
 setup_twitter_oauth(consumer_key, consumer_secret, access_token, access_secret)
 
-oreo <- read.table("oreo.txt") #set appropriate path
+oreo <- read.table("data/oreo.txt") #set appropriate path
 
 
 i = 1
@@ -27,8 +31,8 @@ while(i <= 1) { # change number to the total number of id's in the file
     # call api for 10 ids at a time 
     tweet <- showStatus(oreo[i,1])
     data <- as.data.frame(tweet)
-    write.table(data, "oreo.txt")
-    write.xlsx(data, "oreo.xlsx")
+    write.table(data, "data/oreo.txt")
+    write.xlsx(data, "data/oreo.xlsx")
   })
   
   i <- i + 1 # cahnge to 10 if making 10 calls at a time
