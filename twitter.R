@@ -40,16 +40,42 @@ for(i in 1:5) { # change number to the total number of id's in the file
   #i <- i + 1 # cahnge to 10 if making 10 calls at a time
 }
 
-for(i in 1:5) {
- # tryCatch({
-  Sys.sleep(2)
+# single tweet at a time code here :
+
+for(i in 13197:20000) {
+  Sys.sleep(3)
+  tryCatch({
     tweet <- showStatus(oreo[i,1])
     data <- as.data.frame(tweet)
     print(data)
-    write.xlsx(data, "data/working.xlsx", append = TRUE)
- # })
+    name <- paste0("data/tweet_", i, ".xlsx")
+    write.xlsx(data, name)
+    rm(tweet,data)
+  }, error=function(e){
+    print("I AM DUMB AND I AM BEHAVING WEIRDLY")
+  })
 }
 
 
+# Code for checking 
+tweet <- showStatus(oreo[4,1])
+data <- as.data.frame(tweet)
+print(data)
 
+
+# combine multiple data files into one 
+require(xlsx)
+
+DF <- read.xlsx("data/tweet_1.xlsx",1)
+
+temp = list.files(path="data/",pattern="*.xlsx")
+
+
+for(i in temp) {
+  currentDF <- read.xlsx(paste0("data/", i),1)
+  DF <- rbind(DF, currentDF)
+}
+
+
+write.xlsx(DF, "data/first_12075_oreo.xlsx")
 
