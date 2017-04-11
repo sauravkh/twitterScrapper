@@ -40,12 +40,13 @@ for(i in 1:5) { # change number to the total number of id's in the file
   #i <- i + 1 # cahnge to 10 if making 10 calls at a time
 }
 
+a <- unique(oreo)
 # single tweet at a time code here :
 
-for(i in 13197:20000) {
-  Sys.sleep(3)
+for(i in 42958:60000) {
+  Sys.sleep(1)
   tryCatch({
-    tweet <- showStatus(oreo[i,1])
+    tweet <- showStatus(a[i,1])
     data <- as.data.frame(tweet)
     print(data)
     name <- paste0("data/tweet_", i, ".xlsx")
