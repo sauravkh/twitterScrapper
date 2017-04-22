@@ -16,7 +16,7 @@ setup_twitter_oauth(consumer_key, consumer_secret, access_token, access_secret)
 
 oreo <- read.table("data/oreo.txt", stringsAsFactors = FALSE)
 a <- unique(oreo) #set appropriate path
-
+rm(oreo)
 #######################################
 #### Code for one id per api call #####
 #######################################
@@ -58,10 +58,10 @@ for(i in temp) {
 #### Code for 10 id's per api call ####
 #######################################
 
-big.data <- showStatus(a[1,1])
+big.data <- showStatus(a[690000,1])
 big.data <- as.data.frame(big.data)
-start.from = 1
-while(start.from < 41){
+start.from = 690000 
+while(start.from < 740001){
   # for every 10 from selected id's
   for(repeat.calls in 1:10){ 
     list.of.ids <- a[start.from,1] # first id
@@ -79,5 +79,6 @@ while(start.from < 41){
   
   big.data <- rbind(big.data, current.dataframe)
   start.from = start.from + 10;
+  print(lengths(big.data)[1]) # to check in console how many downloads are done
 }
 

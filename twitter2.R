@@ -5,15 +5,32 @@
 library(twitteR)
 library(httr)
 library(xlsx)
-consumer_key <- "QHJgBeTm2KW5yyKu5jwzFxioT"
-consumer_secret <- "TEvaRBKUaTM41lFzsiiclO7bIUHBZrarPsRPdL647ACMPO6uZe"
-access_token <- "835019765508788224-HUGrNbQLek454Mwf6NBLJNRIxPYwFsI"
-access_secret <- "xNzEIhcuO1WaV5hKGQItIhtCHLLbmAMHg5Y9Jy8S4zJfk"
 
-setup_twitter_oauth(consumer_key, consumer_secret, access_token, access_secret)
+token1 <- c("L8GeTUqQPbKcwdUml25xljl3G",
+            "0umS59pqd4AcEsGgEMzvfhsYT9RFnQyt5RsdU53qoc7LLoqjkP",
+            "835019765508788224-QAvxxTsImlQKLXDBZcRtfbMlFDxM7pM",
+            "6LaX7rgIMde1H55B3huYT3unThbqdaf420WPNaINlxqRe")
+
+token2 <- c("49iRCpw1UaM8kSr27zYmlWlyP",
+            "SSIw3Ck5S1Lknq8OqHnRYBDZDSyHYsRxeEOqkVSNUvIokBTbAK",
+            "835019765508788224-z7mQIISkQy1eX6CxWFWMCW2znIrnOnG",
+            "pPjgmwjrjOliDvFhhI0Q5jHxFSUKEC61dIKYtjf4uRhzg")
+
+token3 <- c("QHJgBeTm2KW5yyKu5jwzFxioT",
+            "TEvaRBKUaTM41lFzsiiclO7bIUHBZrarPsRPdL647ACMPO6uZe",
+            "835019765508788224-HUGrNbQLek454Mwf6NBLJNRIxPYwFsI",
+            "xNzEIhcuO1WaV5hKGQItIhtCHLLbmAMHg5Y9Jy8S4zJfk")
+token4 <- c("JjqU6C81ZSFttww8Xe2lWXrCg",
+            "7MQDARYlC3f7sX5TlstvEHI3BYVjTOiFvRtoiu8fpb5NjBSwny",
+            "835019765508788224-Twx0VMQM48xsdDV0OQ4Q1ZjGdmGrOTt",
+            "N950rLZolhw3I1RLhzujjnqZXTRdu8yueS5HVoL62XLHh")
+
+setup_twitter_oauth(token1[1],token1[2],token1[3],token1[4])
+num = 1;
 
 oreo <- read.table("data/oreo.txt", stringsAsFactors = FALSE)
 a <- unique(oreo)
+rm(oreo)
 
 #######################################
 #### Code for one id per api call #####
@@ -22,7 +39,7 @@ a <- unique(oreo)
 for(i in 640000:590000) {
   Sys.sleep(0.7)
   tryCatch({
-    tweet <- showStatus(a[2,1])
+    tweet <- showStatus(a[640000,1])
     data <- as.data.frame(tweet)
     print(paste0("*********  ", i , "  **********"))
     print(data)
@@ -56,10 +73,77 @@ for(i in 65535:297679){
 #### Code for 10 id's per call ########
 #######################################
 
-big.data <- showStatus(a[1,1])
+big.data <- showStatus(a[648502,1])
 big.data <- as.data.frame(big.data)
-start.from = 1
-while(start.from < 41) {
+
+
+#########################################################
+#### Code for 10 id's per call with error catch ########
+#########################################################
+end = 651913
+oops = 4
+while(oops != 200){
+  print("entered while loop")
+  tryCatch({
+    print("entered tryCatch")
+    callTwitter(end)
+  }, error=function(e){
+    fileName <- paste0("data/another",oops,".csv")
+    write.csv(big.data,fileName)
+    print("entered error catch")
+    if(num == 1){
+      setup_twitter_oauth(token2[1],token2[2],token2[3],token2[4])
+      num <- 2;
+    }else if(num == 2){
+      setup_twitter_oauth(token3[1],token3[2],token3[3],token3[4])
+      num <-  3;
+    }else if(num == 3){
+      setup_twitter_oauth(token4[1],token4[2],token4[3],token4[4])
+      num <-  4;
+    }else {
+      setup_twitter_oauth(token1[1],token1[2],token1[3],token1[4])
+      num <-  1;
+    }
+    print(paste("Now using authentication " , num))
+    end = end + 890
+  })
+  oops <- oops + 1
+}
+
+
+callTwitter <- function(start.from){
+  big.data <- showStatus(a[1,1])
+  while(start.from < 690001) {
+    # for every 10 from selected id's
+    for(repeat.calls in 1:10){ 
+      list.of.ids <- a[start.from,1] # first id
+      # to get 10 id's
+      for(id.number in 1:9){
+        list.of.ids <- c(list.of.ids, a[start.from + id.number,1]) # rest 8
+      }
+      # call api
+      raw.api.data <- lookup_statuses(list.of.ids)
+      current.dataframe <- as.data.frame(raw.api.data[[1]])
+      for(i in 2:length(raw.api.data)){
+        current.dataframe <- rbind(current.dataframe, as.data.frame(raw.api.data[[i]]))
+      } 
+    }
+    #Sys.sleep(0.6)
+    big.data <- rbind(big.data, current.dataframe)
+    start.from = start.from + 10;
+    print(start.from)
+    print(lengths(big.data)[1])# to check in console how many downloads are done
+  }
+  return(start.from)
+}
+
+###########################################################
+#### Code for 10 id's per call without error catch ########
+###########################################################
+
+
+start.from = 648500 
+while(start.from < 690001) {
   # for every 10 from selected id's
   for(repeat.calls in 1:10){ 
     list.of.ids <- a[start.from,1] # first id
@@ -74,8 +158,14 @@ while(start.from < 41) {
       current.dataframe <- rbind(current.dataframe, as.data.frame(raw.api.data[[i]]))
     } 
   }
-  
+  Sys.sleep(1.5)
   big.data <- rbind(big.data, current.dataframe)
   start.from = start.from + 10;
+  print(start.from)
+  print(lengths(big.data)[1]) # to check in console how many downloads are done
 }
+
+
+
+write.csv(big.data,"data/secondfmjks.csv")
 
