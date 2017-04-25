@@ -20,12 +20,9 @@ token3 <- c("QHJgBeTm2KW5yyKu5jwzFxioT",
             "TEvaRBKUaTM41lFzsiiclO7bIUHBZrarPsRPdL647ACMPO6uZe",
             "835019765508788224-HUGrNbQLek454Mwf6NBLJNRIxPYwFsI",
             "xNzEIhcuO1WaV5hKGQItIhtCHLLbmAMHg5Y9Jy8S4zJfk")
-token4 <- c("JjqU6C81ZSFttww8Xe2lWXrCg",
-            "7MQDARYlC3f7sX5TlstvEHI3BYVjTOiFvRtoiu8fpb5NjBSwny",
-            "835019765508788224-Twx0VMQM48xsdDV0OQ4Q1ZjGdmGrOTt",
-            "N950rLZolhw3I1RLhzujjnqZXTRdu8yueS5HVoL62XLHh")
 
-setup_twitter_oauth(token1[1],token1[2],token1[3],token1[4])
+
+setup_twitter_oauth(token2[1],token2[2],token2[3],token2[4])
 num = 1;
 
 oreo <- read.table("data/oreo.txt", stringsAsFactors = FALSE)
@@ -78,19 +75,20 @@ big.data <- as.data.frame(big.data)
 
 
 #########################################################
-#### Code for 10 id's per call with error catch ########
+#### Code for 100 id's per call with error catch ########
 #########################################################
-end = 651913
-oops = 4
-while(oops != 200){
+end = 651923
+oops = 1
+while(oops != 3){
   print("entered while loop")
   tryCatch({
     print("entered tryCatch")
     callTwitter(end)
   }, error=function(e){
-    fileName <- paste0("data/another",oops,".csv")
+    fileName <- paste0("data/tokenTrial",oops,".csv")
     write.csv(big.data,fileName)
-    print("entered error catch")
+    print(paste("entered error catch and file written till", fileName))
+    print(paste("earlier using using authentication " , num))
     if(num == 1){
       setup_twitter_oauth(token2[1],token2[2],token2[3],token2[4])
       num <- 2;
@@ -110,7 +108,9 @@ while(oops != 200){
   oops <- oops + 1
 }
 
-
+start.from <- 650000
+callTwitter(start.from)
+  
 callTwitter <- function(start.from){
   big.data <- showStatus(a[1,1])
   while(start.from < 690001) {
@@ -118,7 +118,7 @@ callTwitter <- function(start.from){
     for(repeat.calls in 1:10){ 
       list.of.ids <- a[start.from,1] # first id
       # to get 10 id's
-      for(id.number in 1:9){
+      for(id.number in 1:99){
         list.of.ids <- c(list.of.ids, a[start.from + id.number,1]) # rest 8
       }
       # call api
@@ -128,13 +128,12 @@ callTwitter <- function(start.from){
         current.dataframe <- rbind(current.dataframe, as.data.frame(raw.api.data[[i]]))
       } 
     }
-    #Sys.sleep(0.6)
+    Sys.sleep(0.6)
     big.data <- rbind(big.data, current.dataframe)
-    start.from = start.from + 10;
+    start.from = start.from + 100;
     print(start.from)
     print(lengths(big.data)[1])# to check in console how many downloads are done
   }
-  return(start.from)
 }
 
 ###########################################################
@@ -142,7 +141,7 @@ callTwitter <- function(start.from){
 ###########################################################
 
 
-start.from = 648500 
+start.from = 651933
 while(start.from < 690001) {
   # for every 10 from selected id's
   for(repeat.calls in 1:10){ 
@@ -165,7 +164,79 @@ while(start.from < 690001) {
   print(lengths(big.data)[1]) # to check in console how many downloads are done
 }
 
-
-
+l <- a[1,1]
+for(i in 1:250){
+  l <- c(l,a[i,1])
+}
 write.csv(big.data,"data/secondfmjks.csv")
 
+#####################################
+#### Code from stackoverflow ########
+#####################################
+
+big.data <- as.data.frame(showStatus(a[2600007,1]))
+
+start.from <- 2600008
+t1 <- Sys.time()
+while(start.from < 2800006){  
+    list.of.ids <- a[start.from,1] # first id
+    # to get 10 id's
+    for(id.number in 1:99){
+      list.of.ids <- c(list.of.ids, a[start.from + id.number,1]) # rest 8
+    }
+    # call api
+    raw.api.data <- lookupStatus(list.of.ids)
+    current.dataframe <- twListToDF(raw.api.data[1])
+    for(i in 2:length(raw.api.data)){
+      current.dataframe <- rbind(current.dataframe, twListToDF(raw.api.data[i]))
+    } 
+  #Sys.sleep(1.56)
+  big.data <- rbind(big.data, current.dataframe)
+  start.from = start.from + 100;
+  print(start.from)
+  print(lengths(big.data)[1])
+  t2 <- Sys.time()
+  print(t2-t1) # to check in console how many downloads are done
+}
+
+
+write.csv(first,"data/A0_tweets.csv")
+
+
+temp = list.files(path="data/",pattern="*.csv")
+
+first <- read.csv(paste0("data/",temp[1]))
+first$X <- NULL
+first$NA. <- NULL
+
+for(i in 2:16) {
+  currentDF <- read.csv(paste0("data/",temp[i]))
+  first <- rbind(first, currentDF)
+  print(paste("finished",i))
+}
+
+
+
+
+lookupStatus <- function (ids, ...){
+  lapply(ids, twitteR:::check_id)
+  
+  batches <- split(ids, ceiling(seq_along(ids)/100))
+  
+  results <- lapply(batches, function(batch) {
+    params <- parseIDs(batch)
+    statuses <- twitteR:::twInterfaceObj$doAPICall(paste("statuses", "lookup", 
+                                                         sep = "/"),
+                                                   params = params, ...)
+    twitteR:::import_statuses(statuses)
+  })
+  return(unlist(results))
+}
+
+parseIDs <- function(ids){
+  id_list <- list()
+  if (length(ids) > 0) {
+    id_list$id <- paste(ids, collapse = ",")
+  }
+  return(id_list)
+}

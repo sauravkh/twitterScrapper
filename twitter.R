@@ -24,7 +24,7 @@ rm(oreo)
 for(i in 280000:300000) {
   Sys.sleep(0.5)
   tryCatch({
-    tweet <- showStatus(a[i,1])
+    tweet <- showStatus(a[1,1])
     data <- as.data.frame(tweet)
     print(paste0("*********  ", i , "  **********"))
     print(data)
@@ -58,9 +58,11 @@ for(i in temp) {
 #### Code for 10 id's per api call ####
 #######################################
 
-big.data <- showStatus(a[690000,1])
+big.data <- showStatus(a[695172,1])
 big.data <- as.data.frame(big.data)
-start.from = 690000 
+
+
+start.from = 696963
 while(start.from < 740001){
   # for every 10 from selected id's
   for(repeat.calls in 1:10){ 
@@ -76,9 +78,68 @@ while(start.from < 740001){
       current.dataframe <- rbind(current.dataframe, as.data.frame(raw.api.data[[i]]))
     } 
   }
-  
+  #Sys.sleep(1.56)
   big.data <- rbind(big.data, current.dataframe)
   start.from = start.from + 10;
+  print(start.from)
   print(lengths(big.data)[1]) # to check in console how many downloads are done
+}
+
+write.csv(big.data,"data/first.csv")
+
+#####################################
+#### Code from stackoverflow ########
+#####################################
+
+big.data <- as.data.frame(showStatus(a[2800006,1]))
+
+start.from <- 2800007
+t1 <- Sys.time()
+while(start.from < 3100001){  
+  list.of.ids <- a[start.from,1] # first id
+  # to get 10 id's
+  for(id.number in 1:99){
+    list.of.ids <- c(list.of.ids, a[start.from + id.number,1]) # rest 8
+  }
+  # call api
+  raw.api.data <- lookupStatus(list.of.ids)
+  current.dataframe <- twListToDF(raw.api.data[1])
+  for(i in 2:length(raw.api.data)){
+    current.dataframe <- rbind(current.dataframe, twListToDF(raw.api.data[i]))
+  } 
+  #Sys.sleep(1.56)
+  big.data <- rbind(big.data, current.dataframe)
+  start.from = start.from + 100;
+  print(start.from)
+  print(lengths(big.data)[1])
+  t2 <- Sys.time()
+  print(t2-t1) # to check in console how many downloads are done
+}
+
+write.csv(big.data,"data/A15_138337_tweets.csv")
+
+
+
+lookupStatus <- function (ids, ...){
+  lapply(ids, twitteR:::check_id)
+  
+  batches <- split(ids, ceiling(seq_along(ids)/100))
+  
+  results <- lapply(batches, function(batch) {
+    params <- parseIDs(batch)
+    statuses <- twitteR:::twInterfaceObj$doAPICall(paste("statuses", "lookup", 
+                                                         sep = "/"),
+                                                   params = params, ...)
+    twitteR:::import_statuses(statuses)
+  })
+  return(unlist(results))
+}
+
+parseIDs <- function(ids){
+  id_list <- list()
+  if (length(ids) > 0) {
+    id_list$id <- paste(ids, collapse = ",")
+  }
+  return(id_list)
 }
 
